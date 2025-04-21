@@ -22,6 +22,8 @@ This project leverages the power of OpenAI's CLIP model for generating joint ima
 
 ## 🚀 Demo
 
+![Screenshot 2025-04-22 at 02-11-12 Visual Search By Vo Thanh Nguyen](https://github.com/user-attachments/assets/555568ba-7f91-485a-be95-13f97d210e15)
+
 
 https://github.com/user-attachments/assets/c16334ec-3932-4aee-bdf4-596115ec1e9e
 ---
