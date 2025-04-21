@@ -30,9 +30,6 @@ This project leverages the power of OpenAI's CLIP model for generating joint ima
 
 ---
 
-https://github.com/user-attachments/assets/c16334ec-3932-4aee-bdf4-596115ec1e9e
----
-
 
 ## 🛠️ Technology Stack
 
