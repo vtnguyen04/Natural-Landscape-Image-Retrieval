@@ -1,1 +1,0 @@
-# Natural-Landscape-Image-Retrieval

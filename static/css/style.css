@@ -1,0 +1,131 @@
+/* styles.css - Place this file in your static folder */
+
+/* Custom Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Enhanced Gradients */
+.search-container {
+    background: linear-gradient(135deg, #6366F1 0%, #3B82F6 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.search-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('/static/pattern.svg') repeat;
+    opacity: 0.1;
+    pointer-events: none;
+}
+
+/* Card Animations */
+.result-card {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.result-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.result-card img {
+    transition: transform 0.5s ease;
+}
+
+.result-card:hover img {
+    transform: scale(1.05);
+}
+
+/* Custom Loader */
+.loader {
+    border: 4px solid rgba(219, 234, 254, 0.3);
+    border-radius: 50%;
+    border-top: 4px solid #3B82F6;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Improved Upload Zone */
+.upload-zone {
+    border: 2px dashed #CBD5E0;
+    transition: all 0.3s ease;
+}
+
+.upload-zone:hover, .upload-zone.dragover {
+    border-color: #3B82F6;
+    background-color: rgba(219, 234, 254, 0.3);
+}
+
+/* Button Animations */
+button[type="submit"] {
+    transition: all 0.3s ease;
+}
+
+button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c5c5c5;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a0a0a0;
+}
+
+/* Image Preview Animations */
+#imagePreview img {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+#imagePreview img:hover {
+    border-color: #3B82F6;
+}
+
+/* Footer Links */
+footer a {
+    color: #93C5FD;
+    transition: color 0.2s ease;
+}
+
+footer a:hover {
+    color: #BFDBFE;
+    text-decoration: underline;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+    .search-container {
+        padding: 3rem 1rem;
+    }
+    
+    h1 {
+        font-size: 1.75rem;
+    }
+}

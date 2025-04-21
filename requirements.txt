@@ -1,0 +1,12 @@
+requests
+Pillow
+numpy
+transformers
+torch 
+faiss-cpu
+Flask
+python-dotenv
+tqdm
+h5py 
+scikit-learn
+sentence-transformers 

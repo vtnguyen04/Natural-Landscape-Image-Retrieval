@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+
+data/raw_images/
+data/processed/
+static/uploads/
+static/dataset_images/
+
+# IDE / Editor specific
+.vscode/
+.idea/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+
+# Docker cache (optional)
+docker-compose.override.yml

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Search | By Vo Thanh Nguyen</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .search-container {
+            background: linear-gradient(135deg, #6366F1 0%, #3B82F6 100%);
+        }
+        .result-card {
+            transition: all 0.3s ease;
+        }
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .loader {
+            border-top-color: #3B82F6;
+            animation: spinner 1s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .upload-zone {
+            border: 2px dashed #CBD5E0;
+            transition: all 0.3s ease;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #3B82F6;
+            background-color: rgba(219, 234, 254, 0.3);
+        }
+        .hidden {
+            display: none;
+        }
+        /* FIX: Ensure input text is visible */
+        input[type="text"], textarea, select {
+            color: #333333 !important; /* Dark text color */
+            background-color: #ffffff !important; /* White background */
+        }
+        input[type="text"]::placeholder, textarea::placeholder {
+            color: #9CA3AF !important; /* Light gray placeholder */
+        }
+        /* Author badge */
+        .author-badge {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .author-image {
+            border: 3px solid #ffffff;
+        }
+        /* Social icons */
+        .social-icon {
+            transition: all 0.2s ease;
+        }
+        .social-icon:hover {
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="search-container text-white py-10 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto">
+            <!-- Author Badge -->
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">Natural Landscape Image Search (CBIR + TBIR) 🌄</h1>
+                    <p class="text-lg opacity-90">Find similar images using AI-powered visual recognition</p>
+                </div>
+                
+                <div class="author-badge mt-4 sm:mt-0 p-3 rounded-lg flex items-center">
+                    <div class="author-image w-12 h-12 rounded-full overflow-hidden mr-3">
+                        <!-- Placeholder image - replace with your actual photo -->
+                        <img src="/api/placeholder/200/200" alt="Vo Thanh Nguyen" class="w-full h-full object-cover" id="authorImg">
+                    </div>
+                    <div>
+                        <h3 class="font-medium">Vo Thanh Nguyen</h3>
+                        <p class="text-sm opacity-80">AI Engineer</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Search Form -->
+            <form action="/search" method="POST" enctype="multipart/form-data" class="space-y-6" id="searchForm">
+                <div class="grid gap-6 md:grid-cols-2">
+                    <!-- Image Upload -->
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-gray-800 font-semibold mb-4">Search by Image</h2>
+                        <div class="upload-zone text-center p-6 rounded-lg cursor-pointer" id="dropZone">
+                            <div id="uploadIcon" class="mb-3">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-blue-500"></i>
+                            </div>
+                            <p class="text-gray-600 mb-2">Drag & drop your image here</p>
+                            <p class="text-gray-500 text-sm mb-4">or</p>
+                            <button type="button" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition" id="browseBtn">
+                                Browse Files
+                            </button>
+                            <input type="file" name="query_image" id="fileInput" class="hidden" accept=".jpg,.jpeg,.png,.webp">
+                            <div id="imagePreview" class="mt-4 hidden">
+                                <img id="previewImg" class="max-h-36 mx-auto rounded-md" src="" alt="Preview">
+                                <button type="button" id="removeImage" class="text-red-500 mt-2 text-sm">
+                                    <i class="fas fa-times"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Text Search -->
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-gray-800 font-semibold mb-4">Search by Text</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="query_text" class="block text-gray-600 mb-2">Enter keywords</label>
+                                <input type="text" name="query_text" id="query_text" placeholder="e.g., mountain landscape, sunset beach" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" style="color: #333333;">
+                            </div>
+                            <div>
+                                <label for="num_results" class="block text-gray-600 mb-2">Number of results</label>
+                                <select name="num_results" id="num_results" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" style="color: #333333;">
+                                    <option value="8">8</option>
+                                    <option value="12" selected>12</option>
+                                    <option value="24">24</option>
+                                    <option value="36">36</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Search Button -->
+                <div class="flex justify-center">
+                    <button type="submit" class="bg-white hover:bg-gray-100 text-blue-700 font-semibold px-6 py-3 rounded-full shadow-md transition transform hover:scale-105 flex items-center" id="searchBtn">
+                        <i class="fas fa-search mr-2"></i>
+                        Search Now
+                    </button>
+                </div>
+            </form>
+        </div>
+    </header>
+    
+    <!-- Loading indicator -->
+    <div id="loading" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center">
+            <div class="loader w-12 h-12 border-4 border-gray-200 rounded-full mb-4"></div>
+            <p class="text-gray-700">Searching for similar images...</p>
+        </div>
+    </div>
+    
+    <!-- Results Section -->
+    <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        {% if search_performed %}
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Search Results</h2>
+                
+                <!-- Query Summary -->
+                <div class="flex items-center flex-wrap gap-4 bg-white p-4 rounded-lg shadow">
+                    {% if query_image_url %}
+                        <div class="flex items-center">
+                            <span class="text-gray-600 mr-2">Image query:</span>
+                            <img src="{{ query_image_url }}" alt="Query image" class="h-12 w-12 object-cover rounded-md">
+                        </div>
+                    {% endif %}
+                    
+                    {% if query_text %}
+                        <div class="flex items-center">
+                            <span class="text-gray-600 mr-2">Text query:</span>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">"{{ query_text }}"</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Results Grid -->
+            {% if results %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {% for image_url in results %}
+                        <div class="result-card bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg">
+                            <a href="{{ image_url }}" target="_blank">
+                                <div class="h-48 overflow-hidden">
+                                    <img src="{{ image_url }}" alt="Search result" class="w-full h-full object-cover">
+                                </div>
+                                <div class="p-3">
+                                    <p class="text-xs text-gray-500 truncate">{{ image_url.split('/')[-1] }}</p>
+                                </div>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-12">
+                    <div class="mb-4 text-gray-400">
+                        <i class="fas fa-search fa-3x"></i>
+                    </div>
+                    <h3 class="text-xl font-medium text-gray-700 mb-2">No results found</h3>
+                    <p class="text-gray-500 max-w-md mx-auto">Try adjusting your search terms or upload a different image.</p>
+                </div>
+            {% endif %}
+        {% else %}
+            <!-- First time user instructions -->
+            <div class="text-center py-8">
+                <div class="mb-6 text-blue-500">
+                    <i class="fas fa-image fa-4x"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-3">Start Searching</h2>
+                <p class="text-gray-600 max-w-lg mx-auto mb-6">
+                    Upload an image or enter text keywords to find visually similar images in our database.
+                </p>
+                <div class="flex justify-center gap-4 flex-wrap">
+                    <div class="bg-white p-4 rounded-lg shadow-md max-w-xs">
+                        <div class="text-blue-500 mb-2">
+                            <i class="fas fa-image fa-2x"></i>
+                        </div>
+                        <h3 class="font-medium mb-1">Image Search</h3>
+                        <p class="text-sm text-gray-500">Upload any image to find visually similar content</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-md max-w-xs">
+                        <div class="text-blue-500 mb-2">
+                            <i class="fas fa-keyboard fa-2x"></i>
+                        </div>
+                        <h3 class="font-medium mb-1">Text Search</h3>
+                        <p class="text-sm text-gray-500">Describe what you're looking for in words</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- About the Author Section -->
+            <div class="bg-white rounded-xl shadow-md p-6 mt-10">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">About the Author</h2>
+                
+                <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+                    <!-- Author Image -->
+                    <div class="w-48 h-48 rounded-lg overflow-hidden flex-shrink-0 border-4 border-indigo-100">
+                        <!-- Replace with your actual photo -->
+                        <img src="/api/placeholder/400/400" alt="Vo Thanh Nguyen" class="w-full h-full object-cover" id="authorBioImg">
+                    </div>
+                    
+                    <!-- Author Info -->
+                    <div class="flex-grow">
+                        <h3 class="text-xl font-bold text-indigo-600 mb-2">Vo Thanh Nguyen</h3>
+                        <h4 class="text-lg text-gray-700 mb-4">AI Engineer</h4>
+                        
+                        <p class="text-gray-600 mb-4">
+                            Passionate about AI application and research, with a focus on developing intelligent systems that enhance human capabilities. 
+                            Specializing in computer vision, machine learning, and building practical AI solutions.
+                        </p>
+                        
+                        <!-- Skills/Tech -->
+                        <div class="mb-4">
+                            <h5 class="font-medium text-gray-700 mb-2">Technologies</h5>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Computer Vision</span>
+                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Machine Learning</span>
+                                <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">Deep Learning</span>
+                                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">Python</span>
+                                <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">PyTorch</span>
+                                <span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full">TensorFlow</span>
+                                <span class="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded-full">CLIP</span>
+                                <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">FAISS</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Social Links -->
+                        <div class="flex gap-3">
+                            <a href="#" class="social-icon text-gray-500 hover:text-blue-600" title="LinkedIn">
+                                <i class="fab fa-linkedin fa-lg"></i>
+                            </a>
+                            <a href="#" class="social-icon text-gray-500 hover:text-gray-900" title="GitHub">
+                                <i class="fab fa-github fa-lg"></i>
+                            </a>
+                            <a href="#" class="social-icon text-gray-500 hover:text-blue-400" title="Twitter">
+                                <i class="fab fa-twitter fa-lg"></i>
+                            </a>
+                            <a href="mailto:example@email.com" class="social-icon text-gray-500 hover:text-red-500" title="Email">
+                                <i class="fas fa-envelope fa-lg"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 px-4 mt-12">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0">
+                <h3 class="font-bold text-xl mb-2">Visual Search</h3>
+                <p class="text-gray-400">Developed by Vo Thanh Nguyen</p>
+                <p class="text-gray-400">Powered by CLIP and FAISS</p>
+            </div>
+            <div class="flex flex-col md:flex-row gap-4 md:gap-8">
+                <div>
+                    <h4 class="font-semibold mb-2">Technology</h4>
+                    <ul class="text-gray-400 text-sm">
+                        <li>CLIP by OpenAI</li>
+                        <li>FAISS by Facebook AI</li>
+                        <li>Flask & Python</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-2">Features</h4>
+                    <ul class="text-gray-400 text-sm">
+                        <li>Image-based search</li>
+                        <li>Text-based search</li>
+                        <li>Fast similarity matching</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="mt-6 text-center text-gray-500 text-sm">
+            <p>© 2025 Vo Thanh Nguyen. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // DOM elements
+        const fileInput = document.getElementById('fileInput');
+        const browseBtn = document.getElementById('browseBtn');
+        const dropZone = document.getElementById('dropZone');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const removeImage = document.getElementById('removeImage');
+        const uploadIcon = document.getElementById('uploadIcon');
+        const searchForm = document.getElementById('searchForm');
+        const loading = document.getElementById('loading');
+        
+        // Event listeners
+        browseBtn.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files && fileInput.files[0]) {
+                displayPreview(fileInput.files[0]);
+            }
+        });
+        
+        removeImage.addEventListener('click', () => {
+            fileInput.value = '';
+            imagePreview.classList.add('hidden');
+            uploadIcon.classList.remove('hidden');
+        });
+        
+        // Drag and drop functionality
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, e => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, e => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            });
+        });
+        
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                fileInput.files = e.dataTransfer.files;
+                displayPreview(e.dataTransfer.files[0]);
+            }
+        });
+        
+        // Form submission
+        searchForm.addEventListener('submit', () => {
+            // Only show loading if either text or image is provided
+            const hasQuery = fileInput.files.length > 0 || document.getElementById('query_text').value.trim() !== '';
+            if (hasQuery) {
+                loading.classList.remove('hidden');
+            }
+        });
+        
+        // Functions
+        function displayPreview(file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                previewImg.src = e.target.result;
+                imagePreview.classList.remove('hidden');
+                uploadIcon.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // For demonstration - you'd replace this with your actual photo URL
+        document.addEventListener('DOMContentLoaded', function() {
+            // Replace these placeholder images with your actual photo
+            const authorImgElements = document.querySelectorAll('#authorImg, #authorBioImg');
+            authorImgElements.forEach(el => {
+                el.src = "/static/multimedia/my.jpg";
+            });
+        });
+    </script>
+</body>
+</html>
